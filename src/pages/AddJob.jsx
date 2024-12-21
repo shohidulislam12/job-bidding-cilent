@@ -1,10 +1,43 @@
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import { AuthContext } from '../providers/AuthProvider'
+import axios from 'axios'
+import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
 const AddJob = () => {
+  const {user}=useContext(AuthContext)
+  const navigate=useNavigate()
   const [startDate, setStartDate] = useState(new Date())
+const handleSubmit= async (e)=>{
+  e.preventDefault()
+  const job_title=e.target.job_title.value
+  const email=user.email
+  const category=e.target.category.value
+  const min_price=parseFloat(e.target.min_price.value)
+  const max_price=parseFloat(e.target.max_price.value)
+  const description=e.target.description.value
+  const deadline=startDate
+  const formData={job_title,
+   buyer:{email,name:user?.displayName,photo:user?.photoURL
+   },bid_count:0,
+    category,min_price,max_price,description,deadline}
 
+
+//make a post reuest
+try{
+  const {data}= await axios.post(`${import.meta.env.VITE_API_URL}/add-job`,formData)
+  toast.success('Data Added Success')
+  e.target.reset()
+navigate('/my-posted-jobs')
+}
+catch(err){
+  toast.error(err.message)
+}
+
+
+}
   return (
     <div className='flex justify-center items-center min-h-[calc(100vh-306px)] my-12'>
       <section className=' p-2 md:p-6 mx-auto bg-white rounded-md shadow-md '>
@@ -12,7 +45,7 @@ const AddJob = () => {
           Post a Job
         </h2>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className='grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2'>
             <div>
               <label className='text-gray-700 ' htmlFor='job_title'>
@@ -32,6 +65,8 @@ const AddJob = () => {
               </label>
               <input
                 id='emailAddress'
+                defaultValue={user.email}
+                disabled={true}
                 type='email'
                 name='email'
                 className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md  focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40  focus:outline-none focus:ring'

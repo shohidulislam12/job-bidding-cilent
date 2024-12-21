@@ -1,9 +1,61 @@
-import { useState } from 'react'
+import { useContext, useEffect, useState } from 'react'
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
+import { useNavigate, useParams } from 'react-router-dom'
+import { AuthContext } from '../providers/AuthProvider'
+import axios from 'axios'
+import toast from 'react-hot-toast'
 
 const UpdateJob = () => {
+  const navigate=useNavigate()
   const [startDate, setStartDate] = useState(new Date())
+  const {user}=useContext(AuthContext)
+const {id}=useParams()
+  const [jobs,setJobs]=useState({})
+  useEffect(()=>{
+    fetchjob()
+  },[jobs._id])
+console.log(user.email)
+const fetchjob= async ()=>{
+const {data}=await axios.get(`${import.meta.env.VITE_API_URL}/job/${id}`)
+setJobs(data)
+}
+console.log(jobs)
+const handleUpdate= async (e)=>{
+  e.preventDefault()
+  const job_title=e.target.job_title.value
+  const email=user.email
+  const category=e.target.category.value
+  const min_price=parseFloat(e.target.min_price.value)
+  const max_price=parseFloat(e.target.max_price.value)
+  const description=e.target.description.value
+  const deadline=startDate
+  const formData={job_title,
+   buyer:{email,name:user?.displayName,photo:user?.photoURL
+   },bid_count:jobs.bid_count,
+    category,min_price,max_price,description,deadline}
+
+
+//make a post reuest
+try{
+  const { data } = await axios.put(
+    `${import.meta.env.VITE_API_URL}/update-Job/${jobs._id}`,
+    formData
+  );
+  toast.success('Data update Success')
+ 
+  console.log('Update Response:', data);
+  e.target.reset()
+navigate('/my-posted-jobs')
+}
+catch(err){
+  toast.error(err.message)
+}
+
+
+console.log(formData)
+
+}
 
   return (
     <div className='flex justify-center items-center min-h-[calc(100vh-306px)] my-12'>
@@ -12,13 +64,14 @@ const UpdateJob = () => {
           Update a Job
         </h2>
 
-        <form>
+        <form onSubmit={handleUpdate}>
           <div className='grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2'>
             <div>
-              <label className='text-gray-700 ' htmlFor='job_title'>
-                Job Title
+              <label  className='text-gray-700 ' htmlFor='job_title'>
+              Job_Title
               </label>
               <input
+              defaultValue={jobs.job_title}
                 id='job_title'
                 name='job_title'
                 type='text'
@@ -27,10 +80,11 @@ const UpdateJob = () => {
             </div>
 
             <div>
-              <label className='text-gray-700 ' htmlFor='emailAddress'>
+              <label  className='text-gray-700 ' htmlFor='emailAddress'>
                 Email Address
               </label>
               <input
+               defaultValue={user.email}
                 id='emailAddress'
                 type='email'
                 name='email'
@@ -43,7 +97,7 @@ const UpdateJob = () => {
 
               <DatePicker
                 className='border p-2 rounded-md'
-                selected={startDate}
+                selected={jobs.deadline}
                 onChange={date => setStartDate(date)}
               />
             </div>
@@ -55,6 +109,8 @@ const UpdateJob = () => {
               <select
                 name='category'
                 id='category'
+               defaultValue={jobs.category}
+                
                 className='border p-2 rounded-md'
               >
                 <option value='Web Development'>Web Development</option>
@@ -67,6 +123,7 @@ const UpdateJob = () => {
                 Minimum Price
               </label>
               <input
+              defaultValue={jobs.min_price}
                 id='min_price'
                 name='min_price'
                 type='number'
@@ -79,6 +136,7 @@ const UpdateJob = () => {
                 Maximum Price
               </label>
               <input
+              defaultValue={jobs.max_price}
                 id='max_price'
                 name='max_price'
                 type='number'
@@ -91,6 +149,9 @@ const UpdateJob = () => {
               Description
             </label>
             <textarea
+             defaultValue={jobs.
+              description
+              }
               className='block w-full px-4 py-2 mt-2 text-gray-700 bg-white border border-gray-200 rounded-md  focus:border-blue-400 focus:ring-blue-300 focus:ring-opacity-40  focus:outline-none focus:ring'
               name='description'
               id='description'
