@@ -1,11 +1,39 @@
+import { useContext, useEffect, useState } from "react"
+import { AuthContext } from "../providers/AuthProvider"
+import axios from "axios"
+import { format } from "date-fns"
+
 const BidRequests = () => {
+  const {user}=useContext(AuthContext)
+  const [bidds,setBidds]=useState([])
+  useEffect(()=>{
+    fetchallbids()
+  },[user])
+console.log(user.email)
+const fetchallbids= async ()=>{
+const {data}=await axios.get(`${import.meta.env.VITE_API_URL}/bid-request/${user?.email} `)
+setBidds(data)
+}
+const handleStatus=async(id,prevStatus,status)=>{
+if(prevStatus===status ||prevStatus==='complete')
+   return console.log("not Allow")
+  try{
+    const {data}= await axios.patch(`${import.meta.env.VITE_API_URL}/bid-status/${id}`,{status})
+    //refrsh ui 
+    fetchallbids()
+    console.log(data)
+  }catch(err){
+    console.log(err)
+  }
+
+}
   return (
     <section className='container px-4 mx-auto my-12'>
       <div className='flex items-center gap-x-3'>
         <h2 className='text-lg font-medium text-gray-800 '>Bid Requests</h2>
 
         <span className='px-3 py-1 text-xs text-blue-600 bg-blue-100 rounded-full '>
-          4 Requests
+          {bidds.length} Requests
         </span>
       </div>
 
@@ -69,72 +97,83 @@ const BidRequests = () => {
                   </tr>
                 </thead>
                 <tbody className='bg-white divide-y divide-gray-200 '>
-                  <tr>
-                    <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      E-commerce Website Development
-                    </td>
-                    <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      instructors@programming-hero.com
-                    </td>
+               {
+                bidds.map(bid=>
+                  <tr key={bid._id}>
+                  <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
+                  {bid.
+job_title}
+                  </td>
+                  <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
+                  {bid.email}
+                  </td>
 
-                    <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      28/05/2024
-                    </td>
+                  <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
+            
+  { bid?.deadline&& format(new Date(bid?.deadline),'P')}
+                  </td>
 
-                    <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
-                      $500
-                    </td>
-                    <td className='px-4 py-4 text-sm whitespace-nowrap'>
-                      <div className='flex items-center gap-x-2'>
-                        <p className='px-3 py-1 rounded-full text-blue-500 bg-blue-100/60 text-xs'>
-                          Web Development
-                        </p>
-                      </div>
-                    </td>
-                    <td className='px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap'>
-                      <div className='inline-flex items-center px-3 py-1 rounded-full gap-x-2 bg-yellow-100/60 text-yellow-500'>
-                        <span className='h-1.5 w-1.5 rounded-full bg-green-500'></span>
-                        <h2 className='text-sm font-normal '>Complete</h2>
-                      </div>
-                    </td>
-                    <td className='px-4 py-4 text-sm whitespace-nowrap'>
-                      <div className='flex items-center gap-x-6'>
-                        <button className='disabled:cursor-not-allowed text-gray-500 transition-colors duration-200   hover:text-red-500 focus:outline-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 24 24'
-                            strokeWidth='1.5'
-                            stroke='currentColor'
-                            className='w-5 h-5'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              d='m4.5 12.75 6 6 9-13.5'
-                            />
-                          </svg>
-                        </button>
-
-                        <button className='disabled:cursor-not-allowed text-gray-500 transition-colors duration-200   hover:text-yellow-500 focus:outline-none'>
-                          <svg
-                            xmlns='http://www.w3.org/2000/svg'
-                            fill='none'
-                            viewBox='0 0 24 24'
-                            strokeWidth='1.5'
-                            stroke='currentColor'
-                            className='w-5 h-5'
-                          >
-                            <path
-                              strokeLinecap='round'
-                              strokeLinejoin='round'
-                              d='M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636'
-                            />
-                          </svg>
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                  <td className='px-4 py-4 text-sm text-gray-500  whitespace-nowrap'>
+                    ${bid.price}
+                  </td>
+                  <td className='px-4 py-4 text-sm whitespace-nowrap'>
+                    <div className='flex items-center gap-x-2'>
+                      <p className='px-3 py-1 rounded-full text-blue-500 bg-blue-100/60 text-xs'>
+                      {bid.
+category
+}
+                      </p>
+                    </div>
+                  </td>
+                  <td className='px-4 py-4 text-sm font-medium text-gray-700 whitespace-nowrap'>
+                    <div className='inline-flex  items-center px-3 py-1 rounded-full gap-x-2 bg-yellow-100/60 text-yellow-500'>
+                      <span className='h-1.5 w-1.5 rounded-full bg-green-500'></span>
+                      <h2 className={`text-sm font-normal ${bid.status==="complete" && "text-green-500"}`}>{bid.status}</h2>
+                    </div>
+                  </td>
+                  <td className='px-4 py-4 text-sm whitespace-nowrap'>
+                    <div className='flex items-center gap-x-6'>
+                      {/* accept nutton */}
+                      <button
+                        disabled={bid.status!=='in Progress'||bid.status==="complete"}
+                       onClick={()=>handleStatus(bid._id,bid.status,"in Progress")}  className={`disabled:cursor-not-allowed  text-gray-500 transition-colors duration-200   hover:text-red-500 focus:outline-none`}>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          strokeWidth='1.5'
+                          stroke='currentColor'
+                          className='w-5 h-5'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            d='m4.5 12.75 6 6 9-13.5'
+                          />
+                        </svg>
+                      </button>
+                      {/* reject request */}
+                      <button onClick={()=>handleStatus(bid._id,bid.status,"rejected")}  className='disabled:cursor-not-allowed text-gray-500 transition-colors duration-200   hover:text-yellow-500 focus:outline-none'>
+                        <svg
+                          xmlns='http://www.w3.org/2000/svg'
+                          fill='none'
+                          viewBox='0 0 24 24'
+                          strokeWidth='1.5'
+                          stroke='currentColor'
+                          className='w-5 h-5'
+                        >
+                          <path
+                            strokeLinecap='round'
+                            strokeLinejoin='round'
+                            d='M18.364 18.364A9 9 0 0 0 5.636 5.636m12.728 12.728A9 9 0 0 1 5.636 5.636m12.728 12.728L5.636 5.636'
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+                )
+               }
                 </tbody>
               </table>
             </div>

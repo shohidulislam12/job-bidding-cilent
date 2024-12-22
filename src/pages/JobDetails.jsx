@@ -3,14 +3,16 @@ import { useContext, useEffect, useState } from 'react'
 
 import DatePicker from 'react-datepicker'
 import 'react-datepicker/dist/react-datepicker.css'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import { AuthContext } from '../providers/AuthProvider'
-import { format } from 'date-fns'
+import { compareAsc, format } from 'date-fns'
+import toast from 'react-hot-toast'
 
 const JobDetails = () => {
   const [startDate, setStartDate] = useState(new Date())
   const {user}=useContext(AuthContext)
 const {id}=useParams()
+const navigate=useNavigate()
   const [jobs,setJobs]=useState({})
   useEffect(()=>{
     fetchjob()
@@ -22,12 +24,50 @@ setJobs(data)
 setStartDate(new Date(data.deadline))
 }
 const {category,description
-  ,job_title
-  ,max_price,min_price,bid_count,deadline,_id,buyer,
+  ,job_title,deadline
+  ,max_price,min_price,bid_count,_id,buyer,
   
   
   }=jobs||{}
- 
+ const handleSubmit= async (e)=>{
+e.preventDefault()
+const job_title=jobs.job_title
+const category=jobs.category
+const status='pending'
+const price=e.target.price.value
+const email=e.target.email.value
+const photo=user.photoURL
+const buyerEmail=jobs.buyer.email
+const job_id=_id
+if(email===buyer?.email){
+  return toast.error("you cannot bid your job")
+}
+if(compareAsc( deadline &&new Date(),new Date(deadline))===1){
+ return toast.error("deadline cros")
+}
+if(price>max_price)
+if(price){
+ return toast.error("bid limited budget ")
+}
+const comment=e.target.comment.value
+const formData={price,email,comment,photo,job_id,deadline:startDate,category,job_title,status,buyerEmail}
+console.log("push", formData)
+try{
+  
+const {data}= await axios.post(`${import.meta.env.VITE_API_URL}/bids`,formData)
+console.log(data)
+toast.success("bid Successful")
+navigate('/my-bids')
+}
+catch(error){
+
+ return toast.error(error?.response?.data)
+}
+
+ }
+
+
+
   return (
     <div className='flex flex-col md:flex-row justify-around gap-5  items-center min-h-[calc(100vh-306px)] md:max-w-screen-xl mx-auto '>
       {/* Job Details */}
@@ -79,7 +119,7 @@ const {category,description
           Place A Bid
         </h2>
 
-        <form>
+        <form onSubmit={handleSubmit}>
           <div className='grid grid-cols-1 gap-6 mt-4 sm:grid-cols-2'>
             <div>
               <label className='text-gray-700 ' htmlFor='price'>
@@ -120,7 +160,7 @@ const {category,description
               />
             </div>
             <div className='flex flex-col gap-2 '>
-              <label className='text-gray-700'>Deadline</label>
+              <label className='text-gray-700'>Deadline { deadline&& format(new Date(deadline),'P')}</label>
 
               {/* Date Picker Input Field */}
               <DatePicker
